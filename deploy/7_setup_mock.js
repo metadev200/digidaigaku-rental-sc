@@ -77,4 +77,4 @@ const deployGenesis = async function (hre) {
 }
 
 module.exports = deployGenesis
-deployGenesis.tags = ['setup']
+deployGenesis.tags = ['mock-data']
