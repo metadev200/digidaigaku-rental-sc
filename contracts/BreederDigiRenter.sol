@@ -7,8 +7,9 @@ import "./Adventure/DigiDaigakuSpirits.sol";
 import "./Adventure/HeroAdventure.sol";
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import "@openzeppelin/contracts/utils/Context.sol";
+import "@openzeppelin/contracts/utils/Address.sol";
 
-contract BreederDigiRenter is Context {
+contract BreederDigiRenter is AdventurePermissions {
     DigiDaigaku public genesisToken;
     DigiDaigakuHeroes public heroToken;
     DigiDaigakuSpirits public spiritToken;
@@ -84,6 +85,8 @@ contract BreederDigiRenter is Context {
         heroToken = DigiDaigakuHeroes(_heroToken);
         spiritToken = DigiDaigakuSpirits(_spiritToken);
         adventure = HeroAdventure(_adventure);
+
+        spiritToken.setAdventuresApprovedForAll(address(adventure), true);
     }
 
     function depositGenesis(uint16 genesisId, uint256 fee) external {
@@ -124,10 +127,10 @@ contract BreederDigiRenter is Context {
      */
     function enterHeroQuest(
         uint16 spiritId,
-        uint16 genesisId,
-        uint256 fee
+        uint16 genesisId
     )
-        external
+        external 
+        payable
         onlyGenesisAvailable(genesisId)
     {
         require(
@@ -136,7 +139,7 @@ contract BreederDigiRenter is Context {
         );
 
         require(
-            genesisFee[genesisId] == fee,
+            genesisFee[genesisId] == msg.value,
             "BreederDigiRenter.enterHeroQuest: fee has changed"
         );
 
@@ -149,9 +152,11 @@ contract BreederDigiRenter is Context {
         spiritToken.transferFrom(_msgSender(), address(this), spiritId);
         genesisToken.approve(address(adventure), genesisId);
         adventure.enterQuest(spiritId, genesisId);
-        weth.transferFrom(_msgSender(), _genesisOwner[genesisId], fee);
 
-        emit HeroOnQuest(spiritId, genesisId, _msgSender(), fee);
+        // sent eth to genesis owner
+        Address.sendValue(payable(_genesisOwner[genesisId]), msg.value);
+
+        emit HeroOnQuest(spiritId, genesisId, _msgSender(), msg.value);
     }
 
     function mintHero(uint16 spiritId) external onlySpiritOwner(spiritId) {
