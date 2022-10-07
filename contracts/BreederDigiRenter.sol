@@ -76,9 +76,9 @@ contract BreederDigiRenter is AdventurePermissions {
     }
 
     constructor(
-        address _genesisToken, 
-        address _heroToken, 
-        address _spiritToken, 
+        address _genesisToken,
+        address _heroToken,
+        address _spiritToken,
         address _adventure
     ) {
         genesisToken = DigiDaigaku(_genesisToken);
@@ -89,13 +89,26 @@ contract BreederDigiRenter is AdventurePermissions {
         spiritToken.setAdventuresApprovedForAll(address(adventure), true);
     }
 
-    function depositGenesis(uint16 genesisId, uint256 fee) external {
+    function depositGenesis(uint16 genesisId, uint256 fee) public {
         genesisToken.transferFrom(_msgSender(), address(this), genesisId);
         _genesisOwner[genesisId] = _msgSender();
         genesisFee[genesisId] = fee;
         genesisIsDeposited[genesisId] = true;
 
         emit GenesisDeposited(genesisId, _msgSender(), fee);
+    }
+
+    function depositMultipleGenesis(
+        uint16[] memory genesisIds,
+        uint256[] memory fees
+    ) external {
+        require(
+            genesisIds.length == fees.length,
+            "BreederDigiRenter.depositMultipleGenesis: incompatible count of values"
+        );
+        for (uint256 i = 0; i < genesisIds.length; i++) {
+            depositGenesis(genesisIds[i], fees[i]);
+        }
     }
 
     function withdrawGenesis(uint16 genesisId)
@@ -125,11 +138,8 @@ contract BreederDigiRenter is AdventurePermissions {
     /**
      * @notice Provide owned spiritId and available genesisId, fee is to explicit to prevent sandwich attack
      */
-    function enterHeroQuest(
-        uint16 spiritId,
-        uint16 genesisId
-    )
-        external 
+    function enterHeroQuest(uint16 spiritId, uint16 genesisId)
+        external
         payable
         onlyGenesisAvailable(genesisId)
     {
