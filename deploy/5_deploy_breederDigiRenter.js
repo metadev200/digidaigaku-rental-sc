@@ -28,4 +28,4 @@ const deployRenter = async function (hre) {
 }
 
 module.exports = deployRenter
-deployRenter.tags = ['renter']
+deployRenter.tags = ['staging']
