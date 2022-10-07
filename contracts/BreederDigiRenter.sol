@@ -15,8 +15,6 @@ contract BreederDigiRenter is AdventurePermissions {
     DigiDaigakuSpirits public spiritToken;
     HeroAdventure public adventure;
 
-    ERC20 weth = ERC20(0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2);
-
     uint256 public constant FORCE_CLAIM_WINDOW = 1 days;
     uint256 public constant HERO_QUEST_DURATION = 1 days;
 
