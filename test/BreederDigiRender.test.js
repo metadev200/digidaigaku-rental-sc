@@ -60,5 +60,28 @@ describe("BreederDigiRender", function () {
         })
     })
 
+    describe("DepositGenesis", function() {
+        const MINT_QUANTITY = 2
+        this.beforeEach(async function() {
+            genesisToken.mintFromOwner(MINT_QUANTITY, addr1.address)
+        })
+
+        it ("Should be able to deposit genesis token", async function() {
+            const GENESIS_ID = 1
+
+            expect(await genesisToken.balanceOf(addr1.address)).to.equal(MINT_QUANTITY)
+            expect(await genesisToken.ownerOf(GENESIS_ID)).to.equal(addr1.address)
+
+            // approve all nft
+            await genesisToken.connect(addr1).setApprovalForAll(breederDigiRender.address, true)
+            expect(await genesisToken.isApprovedForAll(addr1.address, breederDigiRender.address)).to.equal(true)
+
+            const priceInWei = ethers.utils.parseEther("0.1")
+            await expect(breederDigiRender.connect(addr1).depositGenesis(GENESIS_ID, priceInWei))
+                .to.emit(breederDigiRender, "GenesisDeposited")
+                .withArgs(GENESIS_ID, addr1.address, priceInWei)
+        })
+    })
+
 
 })
