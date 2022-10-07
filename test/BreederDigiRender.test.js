@@ -9,7 +9,7 @@ const { ethers } = require("hardhat");
 const { onlyGivenAddressCanInvoke } = require("./helpers");
 
 
-describe("BreederDigiRender", function () {
+describe("breederDigiRenter", function () {
 
     // ===== Reference for Mainnet Fork Test =====
     // DigiDaigaku genesisToken =
@@ -28,7 +28,7 @@ describe("BreederDigiRender", function () {
     const SPIRIT_ID = 1
 
     let genesisToken, heroToken, spiritToken, adventure;
-    let breederDigiRender;
+    let breederDigiRenter;
 
     let accounts;
     let deployer, genesisOwner, spiritOwner, addr1, addr2;
@@ -50,7 +50,7 @@ describe("BreederDigiRender", function () {
         adventure = await HeroAdventure.deploy(heroToken.address, genesisToken.address, spiritToken.address)
 
         const BreederDigiRenter = await ethers.getContractFactory("BreederDigiRenter")
-        breederDigiRender = await BreederDigiRenter.deploy(genesisToken.address, heroToken.address, spiritToken.address, adventure.address)
+        breederDigiRenter = await BreederDigiRenter.deploy(genesisToken.address, heroToken.address, spiritToken.address, adventure.address)
 
         await genesisToken.mintFromOwner(MINT_QUANTITY, genesisOwner.address)
 
@@ -60,38 +60,38 @@ describe("BreederDigiRender", function () {
 
     describe("Setup", function () {
         it("Should have the correct GenesisToken address", async function () {
-            expect(await breederDigiRender.genesisToken()).to.equal(genesisToken.address)
+            expect(await breederDigiRenter.genesisToken()).to.equal(genesisToken.address)
         })
 
         it("Should have the correct DigiDaigakuHeroes address", async function () {
-            expect(await breederDigiRender.heroToken()).to.equal(heroToken.address)
+            expect(await breederDigiRenter.heroToken()).to.equal(heroToken.address)
         })
 
         it("Should have the correct DigiDaigakuSpirits address", async function () {
-            expect(await breederDigiRender.spiritToken()).to.equal(spiritToken.address)
+            expect(await breederDigiRenter.spiritToken()).to.equal(spiritToken.address)
         })
 
         it("Should have the correct HeroAdventure address", async function () {
-            expect(await breederDigiRender.adventure()).to.equal(adventure.address)
+            expect(await breederDigiRenter.adventure()).to.equal(adventure.address)
         })
     })
 
     describe("DepositGenesis", function () {
         this.beforeEach(async function () {
             // approve all nft
-            await genesisToken.connect(genesisOwner).setApprovalForAll(breederDigiRender.address, true)
-            expect(await genesisToken.isApprovedForAll(genesisOwner.address, breederDigiRender.address)).to.equal(true)
+            await genesisToken.connect(genesisOwner).setApprovalForAll(breederDigiRenter.address, true)
+            expect(await genesisToken.isApprovedForAll(genesisOwner.address, breederDigiRenter.address)).to.equal(true)
         })
 
         it("Should be able to deposit genesis token", async function () {
             expect(await genesisToken.balanceOf(genesisOwner.address)).to.equal(MINT_QUANTITY)
             expect(await genesisToken.ownerOf(GENESIS_ID)).to.equal(genesisOwner.address)
 
-            await expect(breederDigiRender.connect(genesisOwner).depositGenesis(GENESIS_ID, PRICE_IN_WEI))
-                .to.emit(breederDigiRender, "GenesisDeposited")
+            await expect(breederDigiRenter.connect(genesisOwner).depositGenesis(GENESIS_ID, PRICE_IN_WEI))
+                .to.emit(breederDigiRenter, "GenesisDeposited")
                 .withArgs(GENESIS_ID, genesisOwner.address, PRICE_IN_WEI)
 
-            expect(await breederDigiRender.genesisFee(GENESIS_ID)).to.equal(PRICE_IN_WEI)
+            expect(await breederDigiRenter.genesisFee(GENESIS_ID)).to.equal(PRICE_IN_WEI)
         })
 
         it("Should not be able to deposit unowned genesis token", async function () {
@@ -99,7 +99,7 @@ describe("BreederDigiRender", function () {
             expect(await genesisToken.ownerOf(GENESIS_ID)).to.equal(genesisOwner.address)
 
             await onlyGivenAddressCanInvoke({
-                contract: breederDigiRender,
+                contract: breederDigiRenter,
                 fnc: "depositGenesis",
                 args: [GENESIS_ID, PRICE_IN_WEI],
                 address: genesisOwner,
@@ -112,29 +112,30 @@ describe("BreederDigiRender", function () {
     describe("WithdrawGenesis", function () {
         this.beforeEach(async function () {
             // approve all nft
-            await genesisToken.connect(genesisOwner).setApprovalForAll(breederDigiRender.address, true)
-            expect(await genesisToken.isApprovedForAll(genesisOwner.address, breederDigiRender.address)).to.equal(true)
+            await genesisToken.connect(genesisOwner).setApprovalForAll(breederDigiRenter.address, true)
+            expect(await genesisToken.isApprovedForAll(genesisOwner.address, breederDigiRenter.address)).to.equal(true)
 
             const PRICE_IN_WEI = ethers.utils.parseEther("0.1")
-            await expect(breederDigiRender.connect(genesisOwner).depositGenesis(GENESIS_ID, PRICE_IN_WEI))
+            await expect(breederDigiRenter.connect(genesisOwner).depositGenesis(GENESIS_ID, PRICE_IN_WEI))
         })
 
         it("Should be able to withdraw genesis token", async function () {
-            await expect(breederDigiRender.connect(genesisOwner).withdrawGenesis(GENESIS_ID))
-                .to.emit(breederDigiRender, "GenesisWithdrawn")
+            await expect(breederDigiRenter.connect(genesisOwner).withdrawGenesis(GENESIS_ID))
+                .to.emit(breederDigiRenter, "GenesisWithdrawn")
                 .withArgs(GENESIS_ID, genesisOwner.address)
 
-            expect(await breederDigiRender.genesisFee(GENESIS_ID)).to.equal(0)
+            expect(await breederDigiRenter.genesisFee(GENESIS_ID)).to.equal(0)
         })
 
         it("Should not be able to withdraw unowned genesis token", async function () {
             await onlyGivenAddressCanInvoke({
-                contract: breederDigiRender,
+                contract: breederDigiRenter,
                 fnc: "withdrawGenesis",
                 args: [GENESIS_ID],
                 address: genesisOwner,
                 accounts,
                 skipPassCheck: false,
+                reason: "BreederDigiRenter.onlyGenesisOwner: not owner of genesis"
             })
         })
     })
@@ -142,29 +143,30 @@ describe("BreederDigiRender", function () {
     describe("UpdateGenesisFee", function () {
         this.beforeEach(async function () {
             // approve all nft
-            await genesisToken.connect(genesisOwner).setApprovalForAll(breederDigiRender.address, true)
-            expect(await genesisToken.isApprovedForAll(genesisOwner.address, breederDigiRender.address)).to.equal(true)
+            await genesisToken.connect(genesisOwner).setApprovalForAll(breederDigiRenter.address, true)
+            expect(await genesisToken.isApprovedForAll(genesisOwner.address, breederDigiRenter.address)).to.equal(true)
 
             const PRICE_IN_WEI = ethers.utils.parseEther("0.1")
-            await expect(breederDigiRender.connect(genesisOwner).depositGenesis(GENESIS_ID, PRICE_IN_WEI))
+            await expect(breederDigiRenter.connect(genesisOwner).depositGenesis(GENESIS_ID, PRICE_IN_WEI))
         })
 
         it("Should be able to update genesisFee", async function () {
-            await expect(breederDigiRender.connect(genesisOwner).updateGenesisFee(GENESIS_ID, PRICE_IN_WEI.mul(2)))
-                .to.emit(breederDigiRender, "GenesisFeeUpdated")
+            await expect(breederDigiRenter.connect(genesisOwner).updateGenesisFee(GENESIS_ID, PRICE_IN_WEI.mul(2)))
+                .to.emit(breederDigiRenter, "GenesisFeeUpdated")
                 .withArgs(GENESIS_ID, PRICE_IN_WEI, PRICE_IN_WEI.mul(2))
 
-            expect(await breederDigiRender.genesisFee(GENESIS_ID)).to.equal(PRICE_IN_WEI.mul(2))
+            expect(await breederDigiRenter.genesisFee(GENESIS_ID)).to.equal(PRICE_IN_WEI.mul(2))
         })
 
         it("Should not be able to update genesisFee of unowned token", async function () {
             await onlyGivenAddressCanInvoke({
-                contract: breederDigiRender,
+                contract: breederDigiRenter,
                 fnc: "updateGenesisFee",
                 args: [GENESIS_ID, PRICE_IN_WEI.mul(2)],
                 address: genesisOwner,
                 accounts,
                 skipPassCheck: false,
+                reason: "BreederDigiRenter.onlyGenesisOwner: not owner of genesis"
             })
         })
     })
@@ -175,25 +177,42 @@ describe("BreederDigiRender", function () {
             await spiritToken.whitelistAdventure(adventure.address, true)
 
             // approve for genesis 
-            await genesisToken.connect(genesisOwner).setApprovalForAll(breederDigiRender.address, true)
-            expect(await genesisToken.isApprovedForAll(genesisOwner.address, breederDigiRender.address)).to.equal(true)
+            await genesisToken.connect(genesisOwner).setApprovalForAll(breederDigiRenter.address, true)
+            expect(await genesisToken.isApprovedForAll(genesisOwner.address, breederDigiRenter.address)).to.equal(true)
 
             // depositing genesis
-            await expect(breederDigiRender.connect(genesisOwner).depositGenesis(GENESIS_ID, PRICE_IN_WEI))
+            await expect(breederDigiRenter.connect(genesisOwner).depositGenesis(GENESIS_ID, PRICE_IN_WEI))
 
             // approve for spirit
-            await spiritToken.connect(spiritOwner).setApprovalForAll(breederDigiRender.address, true)
-            expect(await spiritToken.isApprovedForAll(spiritOwner.address, breederDigiRender.address)).to.equal(true)
+            await spiritToken.connect(spiritOwner).setApprovalForAll(breederDigiRenter.address, true)
+            expect(await spiritToken.isApprovedForAll(spiritOwner.address, breederDigiRenter.address)).to.equal(true)
         })
 
         it("Should be able to rent genesis token", async function () {
             const initialOwnerBalance = await ethers.provider.getBalance(genesisOwner.address)
 
-            await expect(breederDigiRender.connect(spiritOwner).enterHeroQuest(SPIRIT_ID, GENESIS_ID, { value: PRICE_IN_WEI }))
-                .to.emit(breederDigiRender, "HeroOnQuest")
+            await expect(breederDigiRenter.connect(spiritOwner).enterHeroQuest(SPIRIT_ID, GENESIS_ID, { value: PRICE_IN_WEI }))
+                .to.emit(breederDigiRenter, "HeroOnQuest")
                 .withArgs(SPIRIT_ID, GENESIS_ID, spiritOwner.address, PRICE_IN_WEI)
 
             expect(await ethers.provider.getBalance(genesisOwner.address)).to.equal(initialOwnerBalance.add(PRICE_IN_WEI))
+        })
+
+        it("Should not be able to rent using unowned spirit token", async function () {
+            await onlyGivenAddressCanInvoke({
+                contract: breederDigiRenter,
+                fnc: "enterHeroQuest",
+                args: [SPIRIT_ID, GENESIS_ID, { value: PRICE_IN_WEI }],
+                address: spiritOwner,
+                accounts,
+                skipPassCheck: false,
+                reason: "BreederDigiRenter.enterHeroQuest: not owner of spirit"
+            })
+        })
+
+        it("Should not be able to rent already adventuring spirit", async function () {
+            await breederDigiRenter.connect(spiritOwner).enterHeroQuest(SPIRIT_ID, GENESIS_ID, { value: PRICE_IN_WEI })
+            await expect(breederDigiRenter.connect(spiritOwner).enterHeroQuest(SPIRIT_ID, GENESIS_ID, { value: PRICE_IN_WEI })).to.be.revertedWith("BreederDigiRenter.onlyGenesisAvailable: genesis is on adventure")
         })
     })
 })
