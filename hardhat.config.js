@@ -1,6 +1,9 @@
 require('dotenv').config()
+require('@nomiclabs/hardhat-ethers');
 require("@nomicfoundation/hardhat-toolbox");
 require('hardhat-deploy')
+
+require('./tasks/impersonator');
 
 /** @type import('hardhat/config').HardhatUserConfig */
 module.exports = {
@@ -18,6 +21,9 @@ module.exports = {
       url: process.env.GOERLI_URL || '',
       accounts:
         process.env.GOERLI_PRIVATE_KEY !== undefined ? [process.env.GOERLI_PRIVATE_KEY] : [],
+    },
+    localhost: {
+      url: "http://127.0.0.1:8545",
     },
   },
   gasReporter: {
