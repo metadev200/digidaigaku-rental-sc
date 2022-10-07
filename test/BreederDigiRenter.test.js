@@ -63,7 +63,7 @@ describe("breederDigiRenter", function () {
         await genesisToken.mintFromOwner(MINT_QUANTITY, genesisOwner.address)
 
         // minting spirits
-        const SPIRIT_OWNERS = Array(MINT_QUANTITY).fill(spiritOwner.address)
+        const SPIRIT_OWNERS = Array.from({length: MINT_QUANTITY}).fill(spiritOwner.address)
         await spiritToken.airdropMint(SPIRIT_OWNERS)
     })
 
