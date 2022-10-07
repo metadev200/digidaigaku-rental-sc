@@ -60,26 +60,54 @@ describe("BreederDigiRender", function () {
         })
     })
 
-    describe("DepositGenesis", function() {
+    describe("Enter Quest", function() {
         const MINT_QUANTITY = 2
+
+        const GENESIS_ID = 1
+        const GENESIS_PRICE_IN_WEI = ethers.utils.parseEther("0.1")
+
+        const SPIRIT_ID = 1
+
+        async function depositGenesis() {
+        // approve all nft
+        await genesisToken.connect(addr1).setApprovalForAll(breederDigiRender.address, true)
+        expect(await genesisToken.isApprovedForAll(addr1.address, breederDigiRender.address)).to.equal(true)
+
+        await expect(breederDigiRender.connect(addr1).depositGenesis(GENESIS_ID, GENESIS_PRICE_IN_WEI))
+            .to.emit(breederDigiRender, "GenesisDeposited")
+            .withArgs(GENESIS_ID, addr1.address, GENESIS_PRICE_IN_WEI)
+        }
+
         this.beforeEach(async function() {
-            genesisToken.mintFromOwner(MINT_QUANTITY, addr1.address)
+            await genesisToken.mintFromOwner(MINT_QUANTITY, addr1.address)
+            await spiritToken.airdropMint([addr2.address])
+            await spiritToken.whitelistAdventure(adventure.address, true)
         })
 
         it ("Should be able to deposit genesis token", async function() {
-            const GENESIS_ID = 1
-
             expect(await genesisToken.balanceOf(addr1.address)).to.equal(MINT_QUANTITY)
             expect(await genesisToken.ownerOf(GENESIS_ID)).to.equal(addr1.address)
+            depositGenesis()
+        })
 
-            // approve all nft
-            await genesisToken.connect(addr1).setApprovalForAll(breederDigiRender.address, true)
-            expect(await genesisToken.isApprovedForAll(addr1.address, breederDigiRender.address)).to.equal(true)
+        it ("Should be able to enter quest", async function() {
+            // test hero address is on whitelist
+            expect(await spiritToken.isAdventureWhitelisted(adventure.address)).to.equal(true)
 
-            const priceInWei = ethers.utils.parseEther("0.1")
-            await expect(breederDigiRender.connect(addr1).depositGenesis(GENESIS_ID, priceInWei))
-                .to.emit(breederDigiRender, "GenesisDeposited")
-                .withArgs(GENESIS_ID, addr1.address, priceInWei)
+            expect(await spiritToken.balanceOf(addr2.address)).to.equal(1)
+            expect(await spiritToken.ownerOf(SPIRIT_ID)).to.equal(addr2.address)
+
+            // deposit genesis token with ID = 1
+            depositGenesis()
+
+            // approve all spirit
+            await spiritToken.connect(addr2).setApprovalForAll(breederDigiRender.address, true)
+            expect(await spiritToken.isApprovedForAll(addr2.address, breederDigiRender.address)).to.equal(true)
+
+            // Enter Quest
+            await expect(breederDigiRender.connect(addr2).enterHeroQuest(SPIRIT_ID, GENESIS_ID, {value: GENESIS_PRICE_IN_WEI}))
+                .to.emit(breederDigiRender, "HeroOnQuest")
+                .withArgs(SPIRIT_ID, GENESIS_ID, addr2.address, GENESIS_PRICE_IN_WEI)
         })
     })
 
