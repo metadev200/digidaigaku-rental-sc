@@ -310,4 +310,70 @@ describe("breederDigiRenter", function () {
             await expect(breederDigiRenter.connect(genesisOwner).mintHero(SPIRIT_ID)).to.be.revertedWith("BreederDigiRenter.onlySpiritOwner: not owner of spirit")
         })
     })
+
+    describe("ForceClaim", function () {
+        this.beforeEach(async function () {
+            // enteringQuest
+            // approve for genesis 
+            await genesisToken.connect(genesisOwner).setApprovalForAll(breederDigiRenter.address, true)
+
+            // depositing genesis
+            await expect(breederDigiRenter.connect(genesisOwner).depositGenesis(GENESIS_ID, PRICE_IN_WEI))
+
+            // approve for spirit
+            await spiritToken.connect(spiritOwner).setApprovalForAll(breederDigiRenter.address, true)
+            expect(await spiritToken.isApprovedForAll(spiritOwner.address, breederDigiRenter.address)).to.equal(true)
+
+            // enterHeroQuest
+            await breederDigiRenter.connect(spiritOwner).enterHeroQuest(SPIRIT_ID, GENESIS_ID, { value: PRICE_IN_WEI })
+        })
+
+        it("Should be able to forceClaim after window", async function () {
+            // passing 2 days to allow forceClaim
+            await fastForward(DAY * 2);
+
+            await expect(breederDigiRenter.connect(genesisOwner).forceClaim(GENESIS_ID))
+                .to.emit(breederDigiRenter, "HeroMinted")
+                .withArgs(SPIRIT_ID, GENESIS_ID, spiritOwner.address)
+                .to.emit(breederDigiRenter, "ForceClaim")
+                .withArgs(SPIRIT_ID, GENESIS_ID, genesisOwner.address)
+        })
+
+        it("Should not be able to forceClaim before window", async function() {
+            // insufficient time passed
+            await fastForward(DAY);
+
+            await expect(breederDigiRenter.connect(genesisOwner).forceClaim(GENESIS_ID)).to.be.revertedWith("BreederDigiRenter.forceClaim: force claim window not yet active")
+        })
+
+        it("Non-genesis owner should not be able to forceClaim", async function() {
+            await fastForward(DAY * 2);
+
+            await onlyGivenAddressCanInvoke({
+                contract: breederDigiRenter,
+                fnc: "forceClaim",
+                args: [GENESIS_ID],
+                address: genesisOwner,
+                accounts,
+                skipPassCheck: false,
+                reason: "BreederDigiRenter.forceClaim: not owner of genesis"
+            })
+        })
+
+        it("Should not be able to forceClaim already mintedHero", async function() {
+            await fastForward(DAY * 2);
+
+            await breederDigiRenter.connect(spiritOwner).mintHero(SPIRIT_ID)
+
+            await expect(breederDigiRenter.connect(genesisOwner).forceClaim(GENESIS_ID)).to.be.revertedWith("BreederDigiRenter.forceClaim: genesis is not on adventure")
+        })
+
+        it("Should not be able to mintHero already forceClaimed", async function () {
+            await fastForward(DAY * 2);
+
+            await breederDigiRenter.connect(genesisOwner).forceClaim(GENESIS_ID)
+
+            await expect(breederDigiRenter.connect(spiritOwner).mintHero(SPIRIT_ID)).to.be.reverted
+        })
+    })
 })
