@@ -1,4 +1,5 @@
 const logger = Moralis.Cloud.getLogger();
+const ethers = require("ethers");
 
 Moralis.Cloud.afterSave("EventGenesisDeposited", async function (request) {
     const confirmed = request.object.get("confirmed");
@@ -24,6 +25,7 @@ Moralis.Cloud.afterSave("EventGenesisDeposited", async function (request) {
             const withdrawn = false;
             const onQuest = false;
             const timesRented = 0;
+            const earnings = ethers.BigNumber.from("0").toString();
 
             const params = {
                 genesisId,
@@ -33,6 +35,7 @@ Moralis.Cloud.afterSave("EventGenesisDeposited", async function (request) {
                 onQuest,
                 dateCreated,
                 timesRented,
+                earnings,
             }
 
             const httpResponse = await Moralis.Cloud.httpRequest({

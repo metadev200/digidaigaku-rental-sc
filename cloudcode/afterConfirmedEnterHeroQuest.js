@@ -16,6 +16,10 @@ Moralis.Cloud.afterSave("EventHeroOnQuest", async function (request) {
         genesisListing.set("onQuest", true);
         genesisListing.set("timesRented", genesisListing.get("timesRented") + 1);
 
+        const currentEarnings = ethers.BigNumber.from(genesisListing.get("earnings"))
+        const currentFee = ethers.BigNumber.from(genesisListing.get("fee"))
+        genesisListing.set("earnings", currentEarnings.add(currentFee).toString());
+
         await genesisListing.save();
 
         // listing quest history
