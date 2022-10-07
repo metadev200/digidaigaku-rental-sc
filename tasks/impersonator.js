@@ -92,6 +92,10 @@ task("mint-hero", "Mint Hero")
     const spiritOwner = await ethers.getSigner(process.env.SPIRIT_OWNER);
 
     const digiRenter = await ethers.getContract('BreederDigiRenter', spiritOwner);
+    const digiHeroes = await ethers.getContract('DigiDaigakuHeroes');
+
+    await hre.network.provider.send('evm_increaseTime', [90000]); // fast forward 25 hours
+    await hre.network.provider.send('evm_mine');
 
     await digiRenter.mintHero(Number(_.spiritId));
   });
@@ -105,6 +109,8 @@ task("force-claim", "Force claim")
 
     const digiRenter = await ethers.getContract('BreederDigiRenter', genesisOwner);
 
+    await hre.network.provider.send('evm_increaseTime', [180000]); // fast forward 50 hours
+    await hre.network.provider.send('evm_mine');
+
     await digiRenter.forceClaim(Number(_.genesisId));
   });
-
