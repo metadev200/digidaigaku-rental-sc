@@ -24,7 +24,7 @@ const setupInitialNFT = async function (hre) {
 
     log('----------------------------------------------------')
     log('Minting 20 genesis tokens to genesis owner...')
-    // await (await genesisToken.mintFromOwner(MINT_QUANTITY, GENESIS_OWNER)).wait()
+    await (await genesisToken.mintFromOwner(MINT_QUANTITY, GENESIS_OWNER)).wait()
 
     log('----------------------------------------------------')
     log('Minting 20 spirit tokens to spirit owner...')

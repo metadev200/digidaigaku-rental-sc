@@ -30,8 +30,8 @@ const deployAdventure = async function (hre) {
 
     log('----------------------------------------------------')
     log('Whitelisting adventure as hero minter & adventure on spirit...')
-    await heroToken.whitelistMinter(heroAdventure.address)
-    await spiritToken.whitelistAdventure(heroAdventure.address, true)
+    await (await heroToken.whitelistMinter(heroAdventure.address)).wait()
+    await (await spiritToken.whitelistAdventure(heroAdventure.address, true)).wait()
 
     if (!developmentChains.includes(network.name) && process.env.ETHERSCAN_API_KEY) {
         await verify(heroAdventure.address, [heroToken.address, genesisToken.address, spiritToken.address])
