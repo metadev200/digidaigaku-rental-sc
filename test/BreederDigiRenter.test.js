@@ -104,6 +104,9 @@ describe("breederDigiRenter", function () {
                 .to.emit(breederDigiRenter, "GenesisDeposited")
                 .withArgs(GENESIS_ID, genesisOwner.address, PRICE_IN_WEI)
 
+            expect(await genesisToken.balanceOf(genesisOwner.address)).to.equal(MINT_QUANTITY - 1)
+            expect(await genesisToken.ownerOf(GENESIS_ID)).to.equal(breederDigiRenter.address)
+
             expect(await breederDigiRenter.genesisFee(GENESIS_ID)).to.equal(PRICE_IN_WEI)
             expect(await breederDigiRenter.genesisIsDeposited(GENESIS_ID)).to.be.true
         })
@@ -149,6 +152,7 @@ describe("breederDigiRenter", function () {
                 .withArgs(GENESIS_ID, genesisOwner.address)
 
             expect(await breederDigiRenter.genesisFee(GENESIS_ID)).to.equal(0)
+            expect(await genesisToken.ownerOf(GENESIS_ID)).to.equal(genesisOwner.address)
         })
 
         it("Should not be able to withdraw already withdrawn genesis", async function () {
@@ -220,6 +224,9 @@ describe("breederDigiRenter", function () {
                 .withArgs(SPIRIT_ID, GENESIS_ID, spiritOwner.address, PRICE_IN_WEI)
 
             expect(await ethers.provider.getBalance(genesisOwner.address)).to.equal(initialOwnerBalance.add(PRICE_IN_WEI))
+
+            expect(await genesisToken.ownerOf(GENESIS_ID)).to.equal(adventure.address)
+            expect(await spiritToken.ownerOf(SPIRIT_ID)).to.equal(breederDigiRenter.address)
         })
 
         it("Should not be able to rent using unowned spirit token", async function () {
@@ -277,6 +284,11 @@ describe("breederDigiRenter", function () {
             await expect(breederDigiRenter.connect(spiritOwner).mintHero(SPIRIT_ID))
                 .to.emit(breederDigiRenter, "HeroMinted")
                 .withArgs(SPIRIT_ID, GENESIS_ID, spiritOwner.address)
+
+            expect(await genesisToken.ownerOf(GENESIS_ID)).to.equal(breederDigiRenter.address)
+            await expect(spiritToken.ownerOf(SPIRIT_ID)).to.be.revertedWith("ERC721: invalid token ID")
+            expect(await heroToken.ownerOf(SPIRIT_ID)).to.equal(spiritOwner.address)
+
         })
 
         it("Should not be able to mintHero before quest duration ends", async function () {
@@ -337,16 +349,21 @@ describe("breederDigiRenter", function () {
                 .withArgs(SPIRIT_ID, GENESIS_ID, spiritOwner.address)
                 .to.emit(breederDigiRenter, "ForceClaim")
                 .withArgs(SPIRIT_ID, GENESIS_ID, genesisOwner.address)
+
+            expect(await genesisToken.ownerOf(GENESIS_ID)).to.equal(breederDigiRenter.address)
+            await expect(spiritToken.ownerOf(SPIRIT_ID)).to.be.revertedWith("ERC721: invalid token ID")
+            expect(await heroToken.ownerOf(SPIRIT_ID)).to.equal(spiritOwner.address)
+
         })
 
-        it("Should not be able to forceClaim before window", async function() {
+        it("Should not be able to forceClaim before window", async function () {
             // insufficient time passed
             await fastForward(DAY);
 
             await expect(breederDigiRenter.connect(genesisOwner).forceClaim(GENESIS_ID)).to.be.revertedWith("BreederDigiRenter.forceClaim: force claim window not yet active")
         })
 
-        it("Non-genesis owner should not be able to forceClaim", async function() {
+        it("Non-genesis owner should not be able to forceClaim", async function () {
             await fastForward(DAY * 2);
 
             await onlyGivenAddressCanInvoke({
@@ -360,7 +377,7 @@ describe("breederDigiRenter", function () {
             })
         })
 
-        it("Should not be able to forceClaim already mintedHero", async function() {
+        it("Should not be able to forceClaim already mintedHero", async function () {
             await fastForward(DAY * 2);
 
             await breederDigiRenter.connect(spiritOwner).mintHero(SPIRIT_ID)
@@ -376,4 +393,75 @@ describe("breederDigiRenter", function () {
             await expect(breederDigiRenter.connect(spiritOwner).mintHero(SPIRIT_ID)).to.be.reverted
         })
     })
+
+    describe("Withdraw after claiming", function () {
+        this.beforeEach(async function () {
+            // enteringQuest
+            // approve for genesis 
+            await genesisToken.connect(genesisOwner).setApprovalForAll(breederDigiRenter.address, true)
+
+            // depositing genesis
+            await expect(breederDigiRenter.connect(genesisOwner).depositGenesis(GENESIS_ID, PRICE_IN_WEI))
+
+            // approve for spirit
+            await spiritToken.connect(spiritOwner).setApprovalForAll(breederDigiRenter.address, true)
+            expect(await spiritToken.isApprovedForAll(spiritOwner.address, breederDigiRenter.address)).to.equal(true)
+
+            // enterHeroQuest
+            await breederDigiRenter.connect(spiritOwner).enterHeroQuest(SPIRIT_ID, GENESIS_ID, { value: PRICE_IN_WEI })
+        })
+
+        it("Should be able to withdraw after mintHero", async function () {
+            await fastForward(DAY);
+            await breederDigiRenter.connect(spiritOwner).mintHero(SPIRIT_ID)
+
+            await expect(breederDigiRenter.connect(genesisOwner).withdrawGenesis(GENESIS_ID))
+                .to.emit(breederDigiRenter, "GenesisWithdrawn")
+                .withArgs(GENESIS_ID, genesisOwner.address)
+
+            expect(await genesisToken.ownerOf(GENESIS_ID)).to.equal(genesisOwner.address)
+        })
+
+        it("Should not be able to withdraw unowned genesis after mintHero", async function () {
+            await fastForward(DAY);
+            await breederDigiRenter.connect(spiritOwner).mintHero(SPIRIT_ID)
+
+            await onlyGivenAddressCanInvoke({
+                contract: breederDigiRenter,
+                fnc: "withdrawGenesis",
+                args: [GENESIS_ID],
+                address: genesisOwner,
+                accounts,
+                skipPassCheck: false,
+                reason: "BreederDigiRenter.onlyGenesisOwner: not owner of genesis"
+            })
+        })
+
+        it("Should be able to withdraw after forceClaim", async function () {
+            await fastForward(DAY * 2);
+            await breederDigiRenter.connect(genesisOwner).forceClaim(GENESIS_ID)
+
+            await expect(breederDigiRenter.connect(genesisOwner).withdrawGenesis(GENESIS_ID))
+                .to.emit(breederDigiRenter, "GenesisWithdrawn")
+                .withArgs(GENESIS_ID, genesisOwner.address)
+
+            expect(await genesisToken.ownerOf(GENESIS_ID)).to.equal(genesisOwner.address)
+        })
+
+        it("Should not be able to withdraw unowned genesis after forceClaim", async function () {
+            await fastForward(DAY * 2);
+            await breederDigiRenter.connect(genesisOwner).forceClaim(GENESIS_ID)
+
+            await onlyGivenAddressCanInvoke({
+                contract: breederDigiRenter,
+                fnc: "withdrawGenesis",
+                args: [GENESIS_ID],
+                address: genesisOwner,
+                accounts,
+                skipPassCheck: false,
+                reason: "BreederDigiRenter.onlyGenesisOwner: not owner of genesis"
+            })
+        })
+    })
+
 })
