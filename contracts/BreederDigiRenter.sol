@@ -9,14 +9,11 @@ import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import "@openzeppelin/contracts/utils/Context.sol";
 
 contract BreederDigiRenter is Context {
-    DigiDaigaku genesisToken =
-        DigiDaigaku(0xd1258DB6Ac08eB0e625B75b371C023dA478E94A9);
-    DigiDaigakuHeroes heroToken =
-        DigiDaigakuHeroes(0xA225632b2EBc32B9f4278fc8E3FE5C6f6496D970);
-    DigiDaigakuSpirits spiritToken =
-        DigiDaigakuSpirits(0xa8824EeE90cA9D2e9906D377D36aE02B1aDe5973);
-    HeroAdventure adventure =
-        HeroAdventure(0xE60fE8C4C60Fd97f939F5136cCeb7c41EaaA624d);
+    DigiDaigaku public genesisToken;
+    DigiDaigakuHeroes public heroToken;
+    DigiDaigakuSpirits public spiritToken;
+    HeroAdventure public adventure;
+
     ERC20 weth = ERC20(0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2);
 
     uint256 public constant FORCE_CLAIM_WINDOW = 1 days;
@@ -45,6 +42,7 @@ contract BreederDigiRenter is Context {
         address spiritOwner,
         uint256 fee
     );
+
     event HeroMinted(uint16 spiritId, uint16 genesisId, address spiritOwner);
     event ForceClaim(uint16 spiritId, uint16 genesisId, address genesisOwner);
 
@@ -74,6 +72,18 @@ contract BreederDigiRenter is Context {
             "BreederDigiRenter.onlyGenesisAvailable: genesis is on adventure"
         );
         _;
+    }
+
+    constructor(
+        address _genesisToken, 
+        address _heroToken, 
+        address _spiritToken, 
+        address _adventure
+    ) {
+        genesisToken = DigiDaigaku(_genesisToken);
+        heroToken = DigiDaigakuHeroes(_heroToken);
+        spiritToken = DigiDaigakuSpirits(_spiritToken);
+        adventure = HeroAdventure(_adventure);
     }
 
     function depositGenesis(uint16 genesisId, uint256 fee) external {
