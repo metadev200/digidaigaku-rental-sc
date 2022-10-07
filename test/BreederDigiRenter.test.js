@@ -136,6 +136,40 @@ describe("breederDigiRenter", function () {
         })
     })
 
+    describe("DepositMultipleGenesis", function () {
+        const FEES = Array(5).fill(PRICE_IN_WEI)
+        FEES[4] = ethers.utils.parseEther("0.2")
+        this.beforeEach(async function () {
+            // approve all nft
+            await genesisToken.connect(genesisOwner).setApprovalForAll(breederDigiRenter.address, true)
+        })
+
+        it("Should be able to deposit multiple genesis token", async function () {
+            expect(await genesisToken.balanceOf(genesisOwner.address)).to.equal(MINT_QUANTITY)
+            await breederDigiRenter.connect(genesisOwner).depositMultipleGenesis([1, 2, 3, 4, 5], FEES)
+
+            for (let i = 1; i < 5; i++) {
+                expect(await genesisToken.ownerOf(i)).to.equal(breederDigiRenter.address)
+                expect(await breederDigiRenter.genesisFee(i)).to.equal(FEES[i - 1])
+                expect(await breederDigiRenter.genesisIsDeposited(i)).to.be.true
+            }
+
+            expect(await genesisToken.balanceOf(genesisOwner.address)).to.equal(MINT_QUANTITY - 5)
+        })
+
+        it("Should not be able to deposit unowned tokens", async function () {
+            await onlyGivenAddressCanInvoke({
+                contract: breederDigiRenter,
+                fnc: "depositMultipleGenesis",
+                args: [[1, 2, 3, 4, 5], FEES],
+                address: genesisOwner,
+                accounts,
+                skipPassCheck: false,
+                reason: "ERC721: transfer from incorrect owner"
+            })
+        })
+    })
+
     describe("WithdrawGenesis", function () {
         this.beforeEach(async function () {
             // approve all nft
