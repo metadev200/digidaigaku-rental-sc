@@ -279,12 +279,35 @@ describe("breederDigiRenter", function () {
                 .withArgs(SPIRIT_ID, GENESIS_ID, spiritOwner.address)
         })
 
-        it("Should not be able to mintHero before quest duration", async function () {
-            await expect(breederDigiRenter.connect(spiritOwner).mintHero(SPIRIT_ID))
-                .to.emit(breederDigiRenter, "HeroMinted")
-                .withArgs(SPIRIT_ID, GENESIS_ID, spiritOwner.address)
+        it("Should not be able to mintHero before quest duration ends", async function () {
+            await expect(breederDigiRenter.connect(spiritOwner).mintHero(SPIRIT_ID)).to.be.revertedWith("Complete quest to redeem hero")
+        })
 
-                await expect(breederDigiRenter.connect(spiritOwner).mintHero(SPIRIT_ID)).to.be.revertedWith("Complete quest to redeem hero")
+        it("Should not be able to mint unowned spirit", async function () {
+            await fastForward(DAY);
+
+            await onlyGivenAddressCanInvoke({
+                contract: breederDigiRenter,
+                fnc: "mintHero",
+                args: [SPIRIT_ID],
+                address: spiritOwner,
+                accounts,
+                skipPassCheck: false,
+                reason: "BreederDigiRenter.onlySpiritOwner: not owner of spirit"
+            })
+        })
+
+        it("Should not be able to mint same spirit again", async function () {
+            await fastForward(DAY);
+
+            await breederDigiRenter.connect(spiritOwner).mintHero(SPIRIT_ID)
+            await expect(breederDigiRenter.connect(spiritOwner).mintHero(SPIRIT_ID)).to.be.reverted
+        })
+
+        it("Genesis owner should not be able to mint", async function () {
+            await fastForward(DAY);
+
+            await expect(breederDigiRenter.connect(genesisOwner).mintHero(SPIRIT_ID)).to.be.revertedWith("BreederDigiRenter.onlySpiritOwner: not owner of spirit")
         })
     })
 })
