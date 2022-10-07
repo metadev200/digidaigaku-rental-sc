@@ -2,6 +2,7 @@ Moralis.Cloud.afterSave("EventHeroMinted", async function (request) {
     const confirmed = request.object.get("confirmed");
     const spiritId = request.object.get("spiritId");
     const genesisId = request.object.get("genesisId");
+    const dateClaimed = request.object.get("block_timestamp");
     
     if(confirmed) {
         // updating HeroOnQuest status
@@ -10,6 +11,7 @@ Moralis.Cloud.afterSave("EventHeroMinted", async function (request) {
         const heroOnQuest = await getHeroOnQuest(spiritId);
         const genesisOwner = heroOnQuest.get("genesisOwner")
         heroOnQuest.set("questCompleted", true);
+        heroOnQuest.set("dateClaimed", dateClaimed);
         
         await heroOnQuest.save();
 

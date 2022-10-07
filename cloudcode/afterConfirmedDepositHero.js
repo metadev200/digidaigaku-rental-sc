@@ -6,6 +6,7 @@ Moralis.Cloud.afterSave("EventGenesisDeposited", async function (request) {
     const genesisId = request.object.get("genesisId");
     const genesisOwner = request.object.get("genesisOwner");
     const fee = request.object.get("fee");
+    const dateCreated = request.object.get("block_timestamp");
 
     if (confirmed) {
         const existingListing = await getGenesisListing(genesisId, genesisOwner);
@@ -22,13 +23,16 @@ Moralis.Cloud.afterSave("EventGenesisDeposited", async function (request) {
             const genesisListing = new GenesisListing();
             const withdrawn = false;
             const onQuest = false;
+            const timesRented = 0;
 
             const params = {
                 genesisId,
                 genesisOwner,
                 fee,
                 withdrawn,
-                onQuest
+                onQuest,
+                dateCreated,
+                timesRented,
             }
 
             const httpResponse = await Moralis.Cloud.httpRequest({
