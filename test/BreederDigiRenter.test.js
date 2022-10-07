@@ -279,6 +279,14 @@ describe("breederDigiRenter", function () {
             await expect(breederDigiRenter.connect(spiritOwner).enterHeroQuest(nonexistentSpirit, GENESIS_ID, { value: PRICE_IN_WEI })).to.be.revertedWith("ERC721: invalid token ID")
         })
 
+        it("Should not be able to rent using less funds", async function () {
+            await expect(breederDigiRenter.connect(spiritOwner).enterHeroQuest(SPIRIT_ID, GENESIS_ID, { value: PRICE_IN_WEI.sub(1) })).to.be.revertedWith("BreederDigiRenter.enterHeroQuest: fee has changed")
+        })
+
+        it("Should not be able to rent using more funds", async function () {
+            await expect(breederDigiRenter.connect(spiritOwner).enterHeroQuest(SPIRIT_ID, GENESIS_ID, { value: PRICE_IN_WEI.add(1) })).to.be.revertedWith("BreederDigiRenter.enterHeroQuest: fee has changed")
+        })
+
         it("Should not be able to rent unlisted genesis", async function () {
             await expect(breederDigiRenter.connect(spiritOwner).enterHeroQuest(SPIRIT_ID, GENESIS_ID + 1, { value: PRICE_IN_WEI })).to.be.revertedWith("BreederDigiRenter.onlyGenesisAvailable: genesis not deposited")
         })
