@@ -254,7 +254,7 @@ describe("breederDigiRenter", function () {
 
             await expect(breederDigiRenter.connect(spiritOwner).enterHeroQuest(SPIRIT_ID, GENESIS_ID, { value: PRICE_IN_WEI }))
                 .to.emit(breederDigiRenter, "HeroOnQuest")
-                .withArgs(SPIRIT_ID, GENESIS_ID, spiritOwner.address, PRICE_IN_WEI)
+                .withArgs(SPIRIT_ID, GENESIS_ID, spiritOwner.address, genesisOwner.address, PRICE_IN_WEI)
 
             expect(await ethers.provider.getBalance(genesisOwner.address)).to.equal(initialOwnerBalance.add(PRICE_IN_WEI))
 

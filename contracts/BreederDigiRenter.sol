@@ -33,19 +33,20 @@ contract BreederDigiRenter is AdventurePermissions {
 
     mapping(uint16 => uint256) private _genesisQuestStart;
 
-    event GenesisDeposited(uint16 genesisId, address genesisOwner, uint256 fee);
-    event GenesisWithdrawn(uint16 genesisId, address genesisOwner);
-    event GenesisFeeUpdated(uint16 genesisId, uint256 oldFee, uint256 newFee);
+    event GenesisDeposited(uint16 indexed genesisId, address indexed genesisOwner, uint256 fee);
+    event GenesisWithdrawn(uint16 indexed genesisId, address indexed genesisOwner);
+    event GenesisFeeUpdated(uint16 indexed genesisId, uint256 oldFee, uint256 newFee);
 
     event HeroOnQuest(
-        uint16 spiritId,
+        uint16 indexed spiritId,
         uint16 genesisId,
-        address spiritOwner,
+        address indexed spiritOwner,
+        address indexed genesisOwner,
         uint256 fee
     );
 
-    event HeroMinted(uint16 spiritId, uint16 genesisId, address spiritOwner);
-    event ForceClaim(uint16 spiritId, uint16 genesisId, address genesisOwner);
+    event HeroMinted(uint16 indexed spiritId, uint16 indexed genesisId, address indexed spiritOwner);
+    event ForceClaim(uint16 indexed spiritId, uint16 indexed genesisId, address indexed genesisOwner);
 
     modifier onlyGenesisOwner(uint16 genesisId) {
         require(
@@ -166,7 +167,7 @@ contract BreederDigiRenter is AdventurePermissions {
         // sent eth to genesis owner
         Address.sendValue(payable(_genesisOwner[genesisId]), msg.value);
 
-        emit HeroOnQuest(spiritId, genesisId, _msgSender(), msg.value);
+        emit HeroOnQuest(spiritId, genesisId, _msgSender(), _genesisOwner[genesisId], msg.value);
     }
 
     function mintHero(uint16 spiritId) external onlySpiritOwner(spiritId) {
