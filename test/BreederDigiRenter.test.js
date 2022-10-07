@@ -297,6 +297,12 @@ describe("breederDigiRenter", function () {
             await breederDigiRenter.connect(spiritOwner).enterHeroQuest(SPIRIT_ID, GENESIS_ID, { value: PRICE_IN_WEI })
             await expect(breederDigiRenter.connect(spiritOwner).enterHeroQuest(SPIRIT_ID, GENESIS_ID, { value: PRICE_IN_WEI })).to.be.revertedWith("BreederDigiRenter.onlyGenesisAvailable: genesis is on adventure")
         })
+
+        it("Should not be able to updateGenesis when hero on quest", async function () {
+            await breederDigiRenter.connect(spiritOwner).enterHeroQuest(SPIRIT_ID, GENESIS_ID, { value: PRICE_IN_WEI })
+
+            await expect(breederDigiRenter.connect(genesisOwner).updateGenesisFee(GENESIS_ID, PRICE_IN_WEI.mul(2))).to.be.revertedWith("BreederDigiRenter.onlyGenesisAvailable: genesis is on adventure")
+        })
     })
 
     describe("MintHero", function () {
