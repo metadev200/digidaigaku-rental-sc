@@ -1,7 +1,7 @@
 const verify = require('../helpers/verify')
 const { networkConfig, developmentChains } = require('../helpers/hardhat-config')
 
-const deployToken = async function (hre) {
+const deploySpirit = async function (hre) {
     const { getNamedAccounts, deployments, network } = hre
     const { deploy, log } = deployments
     const { deployer } = await getNamedAccounts()
@@ -22,5 +22,5 @@ const deployToken = async function (hre) {
     }
 }
 
-module.exports = deployToken
-deployToken.tags = ['mock']
+module.exports = deploySpirit
+deploySpirit.tags = ['mock']
