@@ -1,5 +1,16 @@
-cache/
-out/
-
+node_modules
 .env
-.vscode
+coverage
+coverage.json
+typechain
+typechain-types
+
+#Hardhat files
+cache
+artifacts
+cache_hardhat
+out
+
+deployments/
+.chainId
+forge-std
