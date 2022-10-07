@@ -168,6 +168,10 @@ describe("breederDigiRenter", function () {
                 reason: "ERC721: transfer from incorrect owner"
             })
         })
+
+        it("Should not be able to use to deposit identical genesis tokens", async function () {
+            await expect(breederDigiRenter.connect(genesisOwner).depositMultipleGenesis([1, 2, 3, 4, 4], FEES)).to.be.reverted
+        })
     })
 
     describe("WithdrawGenesis", function () {
