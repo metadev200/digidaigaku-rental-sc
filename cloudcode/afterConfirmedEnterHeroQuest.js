@@ -10,10 +10,10 @@ Moralis.Cloud.afterSave("EventHeroOnQuest", async function (request) {
         // updating quest status
         logger.info("Genesis going on quest");
         logger.info("Updating genesis listing");
-        const existingListing = await getGenesisListing(genesisId, genesisOwner);
+        const genesisListing = await getGenesisListing(genesisId, genesisOwner);
 
-        existingListing.set("onQuest", true);
-        await existingListing.save();
+        genesisListing.set("onQuest", true);
+        await genesisListing.save();
 
         // listing quest history
         logger.info("creating heroOnQuest listing");

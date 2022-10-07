@@ -6,3 +6,11 @@ async function getGenesisListing(genesisId, genesisOwner) {
 
     return result;
 }
+
+async function getHeroOnQuest(spiritId) {
+    const query = new Moralis.Query("HeroOnQuest");
+    query.equalTo("spiritId", spiritId);
+    const result = await query.first();
+
+    return result;
+}

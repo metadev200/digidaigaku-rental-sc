@@ -14,7 +14,7 @@ Moralis.Cloud.afterSave("EventGenesisDeposited", async function (request) {
             existingListing.set("withdrawn", false);
             existingListing.set("fee", fee);
 
-            existingListing.save();
+            await existingListing.save();
         } else {
             logger.info("Listing new genesis");
 

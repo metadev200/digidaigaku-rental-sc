@@ -8,6 +8,6 @@ Moralis.Cloud.afterSave("EventGenesisWithdrawn", async function (request) {
         const existingListing = await getGenesisListing(genesisId, genesisOwner);
         existingListing.set("withdrawn", true)
 
-        return existingListing.save()
+        await existingListing.save()
     }
 })
